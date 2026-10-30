@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +45,12 @@ def main():
     assert all(Path(p).resolve().is_relative_to(libs) for p in paths)
     run(python, ROOT / 'ops/site.py', 'init', root / 'state')
     run(python, ROOT / 'ops/site.py', 'units', root / 'state', root / 'units')
+    if shutil.which('systemd-analyze'):
+        result = subprocess.run(['systemd-analyze', 'verify', '--man=no',
+                                 *map(str, sorted((root / 'units').glob('*.service')))],
+                                check=True, text=True, capture_output=True)
+        if result.stderr.strip():
+            raise AssertionError('Unit validation diagnostics: ' + result.stderr)
     print('Editable -> PyPI -> editable verified; edits preserved; no services started.')
 
 

@@ -168,10 +168,10 @@ def units(state, output):
             env.update(LDCON_BACKGROUND_LASER_ID=laser,
                        LDCON_NOTIFICATION_PORT=str(8768 + LASERS.index(laser) * 10))
         text = ['[Unit]', 'Description=FanHarvard LDCon ' + name, 'After=network-online.target', '',
-                '[Service]', 'Type=simple', 'WorkingDirectory=' + systemd_quote(state),
+                '[Service]', 'Type=simple', 'WorkingDirectory=' + str(state).replace('%', '%%'),
                 *('Environment=' + systemd_quote(k + '=' + v) for k, v in env.items()),
-                'EnvironmentFile=' + systemd_quote(state / 'private/credentials.env'),
-                'EnvironmentFile=-' + systemd_quote(state / 'private/local.env'),
+                'EnvironmentFile=' + str(state / 'private/credentials.env').replace('%', '%%'),
+                'EnvironmentFile=-' + str(state / 'private/local.env').replace('%', '%%'),
                 'ExecStart=' + ' '.join(systemd_quote(v, command=True) for v in service['argv']),
                 'KillMode=' + ('process' if service['jobs'] else 'control-group'),
                 'Restart=no', 'UMask=0077', 'TimeoutStopSec=30', '', '[Install]', 'WantedBy=default.target', '']

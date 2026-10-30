@@ -88,11 +88,13 @@ def test_units_use_current_env_and_preserve_job_lifetime(tmp_path):
     assert site.units(state, output) == 19
     jobs = (output / 'ldcon-fh-sr422-jobs.service').read_text()
     assert 'KillMode=process' in jobs
+    assert 'WorkingDirectory=' + str(state) + '\n' in jobs
     assert str(Path(site.sys.executable).absolute()) in jobs
     assert 'LDCON_SHARED_ROOTS' in jobs
     assert 'LDCON_PRIVATE_ROOTS' in jobs
     assert 'LDCON_AGENTBRIDGE_PUBLIC' in jobs
     assert 'private/credentials.env' in jobs
+    assert 'EnvironmentFile=' + str(state / 'private/credentials.env') + '\n' in jobs
     for line in (state / 'private/credentials.env').read_text().splitlines():
         assert line.split('=', 1)[1] not in jobs
     with pytest.raises(FileExistsError):
