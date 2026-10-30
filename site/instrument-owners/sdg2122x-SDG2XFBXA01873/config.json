@@ -1,0 +1,63 @@
+{
+  "instrument": "sdg2122x:SDG2XFBXA01873",
+  "kind": "awg",
+  "profile": "siglent_sdg2000x",
+  "host": "192.168.1.34",
+  "transport": "vxi11",
+  "visa_backend": "@py",
+  "resource": "TCPIP::192.168.1.34::INSTR",
+  "expected_identity": "Siglent Technologies,SDG2122X,SDG2XFBXA01873,2.01.01.39R7",
+  "channels": {
+    "1": {
+      "writes_enabled": false,
+      "role": "ThF685 split Fine1/Fine2 input"
+    },
+    "2": {
+      "writes_enabled": false,
+      "role": "Unused; no write authority"
+    }
+  },
+  "safe_start": {
+    "expect": {
+      "1": {
+        "waveform": "DC",
+        "value": 0.0,
+        "enabled": false,
+        "load": "HZ",
+        "polarity": "NOR",
+        "burst": "OFF",
+        "modulation": "OFF",
+        "sweep": "OFF"
+      },
+      "2": {
+        "enabled": false
+      }
+    }
+  },
+  "timeout_s": 10.0,
+  "endpoint_lock": {
+    "port": 5025
+  },
+  "reconnect": "manual",
+  "bind": "127.0.0.1",
+  "port": 47155,
+  "state_dir": "${STATE_ROOT}/instrument-owners/sdg2122x-SDG2XFBXA01873",
+  "lock_dir": "${STATE_ROOT}/instrument-locks",
+  "projection_sources": {
+    "laser-thf685": {
+      "system_id": "thf685",
+      "key_env": "LDCON_PROJECTION_THF685",
+      "channels": [
+        1
+      ]
+    }
+  },
+  "capabilities": {
+    "voltage_bounds_v": [
+      -10.0,
+      10.0
+    ],
+    "max_vpp": 20.0,
+    "max_points": 8000000
+  }
+}

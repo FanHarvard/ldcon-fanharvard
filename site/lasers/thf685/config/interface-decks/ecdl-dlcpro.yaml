@@ -1,0 +1,439 @@
+schema_version: 1
+id: ecdl-dlcpro
+name: ThF685 / DLC Pro
+interfaces:
+  observation: optical_mode_monitor
+  axis: bounded_axis
+  loop: open_loop_state
+  dlc_lock: dlcpro_frequency_control
+  wavelength: frequency_monitor
+cards:
+- id: pzt-frequency-calibration
+  operation: identify.axis_frequency
+  uses:
+  - observation
+  - axis
+  - loop
+  parameters:
+    offsets:
+    - -0.1
+    - 0
+    - 0.1
+    repeats: 2
+    samples_per_point: 5
+    settle_s: 0.2
+    sample_interval_s: 0.05
+    max_sample_age_s: 0.2
+    timeout_s: 120
+    point_timeout_s: 10
+    max_discontinuity_hz: 1000000000
+    max_fit_residual_hz: 10000000
+    max_hysteresis_hz: 20000000
+    min_signal_hz: 1000000
+    require_single_mode: false
+    quality_limits: {}
+    restore_origin: true
+    write_report: true
+- id: steady-lock
+  operation: servo.dlcpro_frequency
+  uses:
+  - dlc_lock
+  parameters:
+    target_frequency_hz: null
+    duration_s: 86400
+    sample_interval_s: 0.1
+    kp: 0.3
+    ki_per_s: 0.5
+    integral_limit_v: 1
+    capture_hz: 100000000
+    tolerance_hz: 10000000
+    tec_gain: 0.1
+    tec_period_s: 10
+    pzt_center_v: null
+- id: observe
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: ordered
+    measurements:
+      wavelength: true
+      optical_quality: false
+      dither: false
+    baseline_s: 2.0
+    wait_s: 0.0
+    duration_s: 10.0
+    history_wait_s: 2.0
+    minimum_samples: 3
+    sample_interval_s: 0.1
+    measurement_max_age_s: 2.0
+    max_sample_gap_s: 1.0
+    timeout_s: 300.0
+- id: current-response
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: ordered
+    measurements:
+      wavelength: true
+      optical_quality: true
+      dither: false
+    baseline_s: 2.0
+    wait_s: 0.0
+    duration_s: 10.0
+    history_wait_s: 2.0
+    minimum_samples: 3
+    sample_interval_s: 0.1
+    measurement_max_age_s: 2.0
+    max_sample_gap_s: 1.0
+    timeout_s: 300.0
+- id: temperature-response
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: ordered
+    measurements:
+      wavelength: true
+      optical_quality: false
+      dither: false
+    baseline_s: 2.0
+    wait_s: 0.0
+    duration_s: 10.0
+    history_wait_s: 2.0
+    minimum_samples: 3
+    sample_interval_s: 0.1
+    measurement_max_age_s: 2.0
+    max_sample_gap_s: 1.0
+    timeout_s: 300.0
+- id: piezo-response
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: ordered
+    measurements:
+      wavelength: true
+      optical_quality: false
+      dither: false
+    baseline_s: 2.0
+    wait_s: 0.0
+    duration_s: 10.0
+    history_wait_s: 2.0
+    minimum_samples: 3
+    sample_interval_s: 0.1
+    measurement_max_age_s: 2.0
+    max_sample_gap_s: 1.0
+    timeout_s: 300.0
+- id: piezo-current-feedforward
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: ordered
+    measurements:
+      wavelength: true
+      optical_quality: true
+      dither: false
+    baseline_s: 2.0
+    wait_s: 0.0
+    duration_s: 10.0
+    history_wait_s: 2.0
+    minimum_samples: 3
+    sample_interval_s: 0.1
+    measurement_max_age_s: 2.0
+    max_sample_gap_s: 1.0
+    timeout_s: 300.0
+- id: batch-measurement
+  operation: measure.batch
+  uses: []
+  parameters:
+    steps: []
+    timeout_s: 3600.0
+- id: gateway-agent
+  operation: agent.resident
+  uses: []
+  parameters:
+    provider: claude
+    mode: create_or_connect
+    workspace: ''
+    session_id: ''
+- id: pi-observation
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: atomic
+    measurements:
+      wavelength: true
+      optical_quality: false
+      dither: false
+    baseline_s: 0.0
+    wait_s: 5.0
+    duration_s: 60.0
+    history_wait_s: 0.0
+    minimum_samples: 100
+    sample_interval_s: 0.1
+    measurement_max_age_s: 2.0
+    max_sample_gap_s: 1.0
+    timeout_s: 90.0
+- id: pi-optimization
+  operation: agent.task
+  uses: []
+  parameters:
+    agent_card_id: gateway-agent
+    instruction_profile: adjustment
+    adjustment_family: pi
+    adjustment_plan_card_id: pi-observation
+    timeout_s: 1800.0
+    adoption_mode: auto_within_approved
+    prompt: Diagnose the observed periodic frequency error and compare independent P/I changes and the integral
+      contribution limit when supported by evidence. Use measured, time-stamped waveforms over several oscillation
+      periods. Distinguish periodic error, drift, saturation and TEC/PZT coupling. Adopt only repeatably measured
+      improvement; otherwise retain the checkpoint and state the limitation. Physical bounds, target, TEC settings,
+      feedforward, calibration and firmware remain unchanged. Foreground operations take priority. The task model
+      authors the explanation. Do not send Teams or webhook messages.
+  agent_execution:
+    mode: required
+    difficulty: deep
+    escalation_profiles: []
+- id: target-response-pi-measurements
+  operation: measure.batch
+  uses: []
+  parameters:
+    steps:
+    - changes: []
+      apply_mode: atomic
+      measurements:
+        wavelength: true
+        optical_quality: false
+        dither: false
+      baseline_s: 0.0
+      wait_s: 0.0
+      duration_s: 60.0
+      history_wait_s: 0.0
+      minimum_samples: 100
+      sample_interval_s: 0.1
+      measurement_max_age_s: 2.0
+      max_sample_gap_s: 1.0
+      timeout_s: 90.0
+    - changes:
+      - parameter: target_frequency_hz
+        offset: 100000000.0
+      apply_mode: atomic
+      measurements:
+        wavelength: true
+        optical_quality: false
+        dither: false
+      baseline_s: 1.0
+      wait_s: 0.0
+      duration_s: 10.0
+      history_wait_s: 0.0
+      minimum_samples: 100
+      sample_interval_s: 0.1
+      measurement_max_age_s: 2.0
+      max_sample_gap_s: 1.0
+      timeout_s: 40.0
+    - changes:
+      - parameter: target_frequency_hz
+        offset: -100000000.0
+      apply_mode: atomic
+      measurements:
+        wavelength: true
+        optical_quality: false
+        dither: false
+      baseline_s: 1.0
+      wait_s: 0.0
+      duration_s: 10.0
+      history_wait_s: 0.0
+      minimum_samples: 100
+      sample_interval_s: 0.1
+      measurement_max_age_s: 2.0
+      max_sample_gap_s: 1.0
+      timeout_s: 40.0
+    - changes: []
+      apply_mode: atomic
+      measurements:
+        wavelength: true
+        optical_quality: false
+        dither: false
+      baseline_s: 0.0
+      wait_s: 0.0
+      duration_s: 60.0
+      history_wait_s: 0.0
+      minimum_samples: 100
+      sample_interval_s: 0.1
+      measurement_max_age_s: 2.0
+      max_sample_gap_s: 1.0
+      timeout_s: 90.0
+    timeout_s: 180.0
+- id: target-response-pi-optimization
+  operation: agent.task
+  uses: []
+  parameters:
+    agent_card_id: gateway-agent
+    instruction_profile: adjustment
+    adjustment_family: pi
+    adjustment_plan_card_id: target-response-pi-measurements
+    timeout_s: 1200.0
+    adoption_mode: auto_within_approved
+    prompt: Optimize the admitted target-step response and steady performance together using the common response/PI
+      policy. Compare independent P, I and integral-contribution candidates where evidence justifies them, repeat
+      a promising candidate, and explain the measured speed/noise trade-off before adoption. Keep the frozen target
+      program, physical envelope, TEC, FF, calibration and firmware unchanged. Foreground requests take priority.
+      Do not send Teams or webhook messages.
+  agent_execution:
+    mode: required
+    difficulty: deep
+    escalation_profiles: []
+- id: frequency-staircase
+  operation: sweep.dlcpro_awg
+  uses: []
+  parameters:
+    shot_sweep: null
+    pzt_ff_gain_scale: 1.0
+    sample_interval_s: 0.05
+- id: pi-probe
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: atomic
+    measurements:
+      wavelength: true
+      optical_quality: false
+      dither: false
+    baseline_s: 0.0
+    wait_s: 2.0
+    duration_s: 20.0
+    history_wait_s: 0.0
+    minimum_samples: 50
+    sample_interval_s: 0.1
+    measurement_max_age_s: 2.0
+    max_sample_gap_s: 1.0
+    timeout_s: 60.0
+- id: optical-probe
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: coordinated
+    measurements:
+      wavelength: true
+      optical_quality: true
+      dither: false
+    baseline_s: 0.0
+    wait_s: 5.0
+    duration_s: 20.0
+    history_wait_s: 0.0
+    minimum_samples: 10
+    sample_interval_s: 0.1
+    measurement_max_age_s: 5.0
+    max_sample_gap_s: 3.0
+    timeout_s: 60.0
+- id: thermal-probe
+  operation: measure.change
+  uses: []
+  parameters:
+    changes: []
+    apply_mode: coordinated
+    measurements:
+      wavelength: true
+      optical_quality: true
+      dither: false
+    baseline_s: 0.0
+    wait_s: 25.0
+    duration_s: 60.0
+    history_wait_s: 0.0
+    minimum_samples: 20
+    sample_interval_s: 0.1
+    measurement_max_age_s: 5.0
+    max_sample_gap_s: 3.0
+    timeout_s: 120.0
+- id: agent-adjust
+  operation: agent.task
+  uses: []
+  parameters:
+    agent_card_id: gateway-agent
+    instruction_profile: adjustment
+    adjustment_family: auto
+    adjustment_measurement_cards:
+      pi: pi-probe
+      current: optical-probe
+      slow_loop: thermal-probe
+      feedforward: optical-probe
+    timeout_s: 1800.0
+    adoption_mode: auto_within_approved
+    prompt: Assess current owner evidence and relevant history, then choose one supported adjustment family. Compare
+      independent P/I/integral changes, current operating point, TEC centering parameters or internal current feedforward
+      when justified. Use small informative initial changes, then adapt to the observations; an absolute output
+      range is not a suggested step. Respect the current owner operating mode. Judge wavelength stability, optical
+      quality, PZT headroom, drift and intervention frequency together; do not stop merely because a display threshold
+      is met. Compare repeated checkpoint/candidate windows and describe trade-offs and uncertainty. Do not reinterpret
+      stale optics as fresh wavelength data. Inadequate natural PZT excitation cannot establish an FF coefficient
+      optimum; report that limitation instead of starting a sweep. Preserve the optical target, physical bounds,
+      calibration and firmware. Foreground requests have priority. The task model writes the explanation. Do not
+      send Teams or webhook messages.
+  agent_execution:
+    mode: required
+    difficulty: deep
+    escalation_profiles: []
+- id: agent-monitor
+  operation: agent.monitor
+  uses: []
+  parameters:
+    agent_card_id: gateway-agent
+    task_card_id: agent-adjust
+    interval_s: 3600.0
+    lookback_s: 3600.0
+    sample_interval_s: 2.0
+    enabled: true
+    follow_quality_thresholds: true
+    conditions:
+    - id: quality-side-peak-height-max
+      metric: observation.quality.metrics.side_peak_height_max
+      above: 0.2
+      clear_below: 0.18000000000000002
+      persistence_s: 120.0
+      cooldown_s: 1800.0
+      max_age_s: 5.0
+      repeat_s: 1800.0
+    - id: quality-side-peak-prominence-max
+      metric: observation.quality.metrics.side_peak_prominence_max
+      above: 0.12
+      clear_below: 0.108
+      persistence_s: 120.0
+      cooldown_s: 1800.0
+      max_age_s: 5.0
+      repeat_s: 1800.0
+    - id: quality-main-fwhm-fraction
+      metric: observation.quality.metrics.main_fwhm_fraction
+      above: 0.28
+      clear_below: 0.25200000000000006
+      persistence_s: 120.0
+      cooldown_s: 1800.0
+      max_age_s: 5.0
+      repeat_s: 1800.0
+    - id: integral-saturation
+      metric: integral_utilization
+      above: 0.95
+      clear_below: 0.8
+      persistence_s: 60.0
+      cooldown_s: 1800.0
+      max_age_s: 5.0
+      repeat_s: 1800.0
+    background:
+      enabled: true
+      controller_operation: servo.dlcpro_frequency
+      families:
+      - pi
+      - current
+      - slow_loop
+      - feedforward
+      timeout_s: 1800.0
+    prompt: Assess sustained changes and the existing operation history. A warning requests assessment, not mandatory
+      physical movement. Invoke the same registered adjustment task used for manual optimization. Select one supported
+      family using owner-confirmed evidence and the current operating mode. Do not start or recover a stopped laser,
+      change its optical target, or start a sweep. Allow ordinary scatter/drift consistent with practical intervention
+      frequency. Report unsupported paths and incomplete evidence explicitly. Do not send Teams or webhook messages.

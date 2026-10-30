@@ -1,0 +1,65 @@
+{
+  "host": "dlc-thf685.localnet",
+  "expected_serial_number": "DLC PRO_042070",
+  "listen_host": "127.0.0.1",
+  "listen_port": 47145,
+  "socket_timeout_s": 2,
+  "tick_s": 0.001,
+  "state_directory": "${STATE_ROOT}/lasers/thf685/dlcpro-owner",
+  "laser_files": [
+    "${STATE_ROOT}/lasers/thf685/config/lasers/thf685.yaml"
+  ],
+  "hardware": {
+    "axes": {
+      "piezo": {
+        "bounds": [
+          -1.0,
+          140.0
+        ]
+      },
+      "temperature": {
+        "bounds": [
+          18.0,
+          31.0
+        ]
+      },
+      "current": {
+        "bounds": [
+          0.0,
+          88.0
+        ]
+      }
+    },
+    "channels": {
+      "1": {
+        "laser_id": "thf685",
+        "output_filters_verified": true,
+        "ff_reference_v": null,
+        "pzt_scan_output_channel": 50,
+        "scan_frequency_bounds_hz": null,
+        "ff_delta_verified": true
+      }
+    }
+  },
+  "expected_firmware_version": "1.9.0.27a1cf0",
+  "ff_adjustments": {
+    "thf685": {
+      "evidence": {
+        "identity": {
+          "serial_number": "DLC PRO_042070",
+          "firmware_version": "1.9.0.27a1cf0"
+        },
+        "pzt_hardware_bounds_v": [
+          -1.0,
+          140.0
+        ],
+        "pzt_delta_qualification": {
+          "verified": true,
+          "channel": 1,
+          "source": "${STATE_ROOT}/private/evidence/analysis.json"
+        }
+      },
+      "tolerance_ma": 0.01
+    }
+  }
+}

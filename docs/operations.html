@@ -1,0 +1,97 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FanHarvard LDCon operations</title>
+<style>body{font:16px/1.7 system-ui;max-width:900px;margin:3rem auto;padding:0 1rem}pre{background:#f1f5f9;padding:1rem;overflow:auto}td,th{text-align:left;vertical-align:top;padding:.5rem;border-bottom:1px solid #ddd}code{font-size:.9em}</style>
+<h1>FanHarvard LDCon operations</h1>
+<p>Still in active development. This is the site repository; Python implementation and tests belong to
+<a href="https://github.com/FanHarvard/ldcon">ldcon</a>,
+<a href="https://github.com/FanHarvard/experiment-core">experiment-core</a> and
+<a href="https://github.com/FanHarvard/agentbridge">agentbridge</a>.
+The initial snapshot was reviewed from the October 30, 2026 configuration. It is not a live-state report.</p>
+<h2>Editable development</h2>
+<pre>git clone https://github.com/FanHarvard/ldcon-fanharvard.git
+cd ldcon-fanharvard
+python3.12 ops/setup.py --editable
+.venv/bin/python ops/site.py validate</pre>
+<p>Linux and Python 3.12 are the supported site environment. The setup tool creates <code>.venv</code>,
+clones the three public repositories at the compatible release tags, creates a development branch, and installs
+all three with pip's editable mode. <code>libraries/</code> is ignored by this repository: each library has
+its own Git history. Existing checkouts are reused without fetch, reset, checkout or deletion.</p>
+<p>To reuse checkouts in another directory, add <code>--libraries-root /absolute/library-parent</code>.
+The directory must contain <code>ldcon</code>, <code>experiment-core</code>, and <code>agentbridge</code>;
+missing repositories are cloned. Use <code>--venv /absolute/new-venv</code> for a separate test environment.</p>
+<pre># Equivalent editable installs after the clones exist:
+.venv/bin/python -m pip install -c constraints.txt \
+  -e libraries/experiment-core -e libraries/agentbridge \
+  -e 'libraries/ldcon[web,instruments,analysis,agents]'
+.venv/bin/python -m pip list --editable</pre>
+<p>Python source edits take effect in newly started processes. Running processes keep loaded modules;
+service restart and hardware handover are separate operations. Changes to dependencies, entry points or package
+metadata require rerunning setup. If changing a package version, update the corresponding pins together.</p>
+<h2>Switching to published packages and back</h2>
+<pre>python3.12 ops/setup.py --published
+.venv/bin/python -m pip list --editable
+python3.12 ops/setup.py --editable
+.venv/bin/python -m pip list --editable</pre>
+<p>Published mode explicitly reinstalls the three pinned PyPI distributions, so a same-version editable
+installation does not remain active. Library checkouts and their edits remain on disk. Switching back reuses them.
+Do not run either mode against the virtualenv of a running deployment. Use another <code>--venv</code> and
+review its configuration before a planned cutover.</p>
+<h2>Configuration, local state and credentials</h2>
+<table><tr><th>Location</th><th>Purpose</th></tr>
+<tr><td><code>site/</code> in Git</td><td>Laser definitions, decks, assignments and physical-owner configuration. Site-specific LAN addresses, identities and physical limits are retained. Output permission starts disabled; previous agent session IDs and recovery artifact pointers are cleared.</td></tr>
+<tr><td>Separate state root</td><td>Staged configuration, logs, jobs, leases, dashboards, agent conversations and commissioning records. Never commit this directory.</td></tr>
+<tr><td><code>STATE_ROOT/private/credentials.env</code></td><td>Owner bearer and projection keys generated locally by init, mode 0600. No keys are printed.</td></tr>
+<tr><td><code>STATE_ROOT/private/local.env</code></td><td>Optional host-specific paths, provider settings and credential references. Provider CLIs retain their own login stores.</td></tr></table>
+<pre>.venv/bin/python ops/site.py init "$HOME/.local/share/ldcon-fanharvard"
+.venv/bin/python ops/site.py plan "$HOME/.local/share/ldcon-fanharvard"
+.venv/bin/python ops/site.py units "$HOME/.local/share/ldcon-fanharvard" /tmp/ldcon-fh-units</pre>
+<p><code>init</code> requires a new directory outside this repository and refuses to overwrite existing state.
+It expands <code>${STATE_ROOT}</code> paths, validates the three laser assignments and owner policies, and creates
+local credentials. <code>plan</code> prints commands; <code>units</code> writes user-systemd drafts. Neither starts,
+enables, installs or restarts a service. Unit drafts use the interpreter that runs the command; regenerate them
+after selecting a different virtualenv. Fresh dashboard capability URLs are generated only when Web starts.</p>
+<p>The clone contains no existing hardware authority: retain/review the actual local commissioning evidence,
+physical-lock manifest and inode identities, existing leases and owner state during migration. Set
+<code>LDCON_PHYSICAL_LOCK_MANIFEST</code> in local.env to the verified host manifest (default draft path:
+<code>STATE_ROOT/private/physical-locks.json</code>). Do not invent a new manifest to bypass an existing owner.
+Source evidence files are not distributed; reviewed local copies go under <code>private/evidence/</code>.
+Review the existing per-device <code>allow_output</code>/<code>writes_enabled</code> values before enabling hardware.</p>
+<h2>Hardware and agent prerequisites</h2>
+<table><tr><th>Laser</th><th>Site hardware</th></tr>
+<tr><td>Sr422</td><td>ECDL, digital PZT servo, current and TEC actuation through the configured shared AWGs, wavelength measurement and fringe/optical diagnostics.</td></tr>
+<tr><td>Sr1092</td><td>DFB/DBR, CLD1015 current/TEC controller, digital current servo, wavelength measurement, and the configured AWG route for feedforward.</td></tr>
+<tr><td>ThF685</td><td>TOPTICA DLC Pro, configured wavelength/UDP input and optical-pattern data; dedicated AWG for the configured external modulation/sweep route.</td></tr></table>
+<p>The site snapshot names the installed digital-servo driver and exact hardware identities; the reusable LDCon
+library is not tied to one board. Other boards require a compatible adapter and commissioning.
+External wavemeter, telemetry/metrics and instrument firmware services remain separate dependencies.</p>
+<p>Agent execution requires the selected provider CLI/login, Linux bubblewrap and the necessary host user-namespace
+support. Supported resident clients are Claude Code, Codex and OpenCode, with DeepSeek Harness as a task adapter.
+Host-only credentials and adaptive-control authority are hidden from agent sandboxes. No prior sessions, hub
+registrations, messages or notification destinations are imported by init; every new agent needs its own verified identity.
+Notification destinations are configured locally.</p>
+<h2>Updating and eventual cutover</h2>
+<ol>
+<li>Commit library edits in their own repositories. Test and publish compatible library releases, then update
+<code>requirements.txt</code>, <code>constraints.txt</code> and the tags in <code>ops/setup.py</code> together.</li>
+<li>Review site configuration changes in this repository. Runtime configuration is a copy: Git pull does not
+silently overwrite settings saved by operators or agents. Bring selected non-secret changes back into <code>site/</code>,
+replace the local state-root prefix with <code>${STATE_ROOT}</code>, clear session/artifact pointers and keep initial outputs disabled.</li>
+<li>Clone the approved site commit into a new directory, create a new environment and a new staging state root,
+then validate and review generated units. For production, use published wheels and record the site commit,
+package versions, <code>pip freeze</code> and configuration hashes. Keep that release immutable.</li>
+<li>Before any physical cutover, inspect current jobs, output readbacks, faults, ownership, retained leases and
+commissioning records. Preserve the existing physical-lock exclusion domain and credential identity; freshly generated
+staging keys do not authenticate to existing owners. Review config differences against the actual installed release.</li>
+<li>Use the established normal stop/hold and owner handover procedure in the site's normative deployment design
+(§7.1). Shared instruments require their consumers and leases to be handled in the defined order.
+Promote a consistent release across roles; retain the previous release, configuration and units for rollback.
+Do not restart owners during a lock or discard durable state to make startup pass.</li>
+</ol>
+<p>This repository preparation performs no live migration. The current source at <code>/opt/ldcon/repo/ldcon/doc/card-system-design.md</code>
+remains the host's normative design; changing repository layout does not change its operating constraints.</p>
+<h2>Verification</h2>
+<p>CI installs the pinned public packages, checks the public-file/credential boundary, validates all 78 cards and
+owner policies offline, and tests initialization, isolation, unit generation and editable/PyPI switching.
+These checks do not commission hardware or establish lock performance. Contact <a href="mailto:kenjishu@fas.harvard.edu">kenjishu@fas.harvard.edu</a>.</p>
+</html>

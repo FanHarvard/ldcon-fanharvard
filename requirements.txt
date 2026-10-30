@@ -1,0 +1,5 @@
+# Public libraries, with the complete resolved environment in constraints.txt.
+-c constraints.txt
+ldcon[web,instruments,analysis,agents]==0.2.2
+experiment-core==0.1.0
+fanharvard-agentbridge==0.1.0

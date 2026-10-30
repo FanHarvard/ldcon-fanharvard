@@ -1,0 +1,21 @@
+{
+  "bind": "127.0.0.1",
+  "port": 47150,
+  "state_dir": "${STATE_ROOT}/instrument-owners",
+  "start_timeout_s": 30.0,
+  "probe_timeout_s": 3.0,
+  "instruments": {
+    "sdg2042x:SDG2XFBCA00839": {
+      "endpoint": "http://127.0.0.1:47151",
+      "kind": "awg",
+      "description": "Siglent SDG2042X at 192.168.1.37 (CH1 = sr422 TEC DC, CH2 = sr1092 native FF modulation)",
+      "unit": "ldcon-fh-sdg2042x-SDG2XFBCA00839.service"
+    },
+    "sdg2042x:SDG2XFBCA00845": {
+      "endpoint": "http://127.0.0.1:47153",
+      "kind": "awg",
+      "description": "Siglent SDG2042X at 192.168.1.38 (awg-ldcon-sr422-sgl.localnet; CH1 = sr422 LDC current dither/FF, CH2 = sr422 PZT ext-mod); replaced the BK 4054B 2026-10-22",
+      "unit": "ldcon-fh-sdg2042x-SDG2XFBCA00845.service"
+    }
+  }
+}
