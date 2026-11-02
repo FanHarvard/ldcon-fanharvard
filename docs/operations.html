@@ -5,7 +5,7 @@
 <h1>FanHarvard LDCon operations</h1>
 <p>Still in active development. This is the site repository; Python implementation and tests belong to
 <a href="https://github.com/FanHarvard/ldcon">ldcon</a>,
-<a href="https://github.com/FanHarvard/experiment-core">experiment-core</a> and
+<a href="https://github.com/FanHarvard/experiment-core">experiment-core</a>, <a href="https://github.com/FanHarvard/experiment-drivers">experiment-drivers</a> and
 <a href="https://github.com/FanHarvard/agentbridge">agentbridge</a>.
 The initial snapshot was reviewed from the October 30, 2026 configuration. It is not a live-state report.</p>
 <h2>Editable development</h2>
@@ -14,15 +14,15 @@ cd ldcon-fanharvard
 python3.12 ops/setup.py --editable
 .venv/bin/python ops/site.py validate</pre>
 <p>Linux and Python 3.12 are the supported site environment. The setup tool creates <code>.venv</code>,
-clones the three public repositories at the compatible release tags, creates a development branch, and installs
-all three with pip's editable mode. <code>libraries/</code> is ignored by this repository: each library has
+clones the four public repositories at compatible tags or a pinned commit, creates a development branch, and installs
+all four with pip's editable mode. <code>libraries/</code> is ignored by this repository: each library has
 its own Git history. Existing checkouts are reused without fetch, reset, checkout or deletion.</p>
 <p>To reuse checkouts in another directory, add <code>--libraries-root /absolute/library-parent</code>.
-The directory must contain <code>ldcon</code>, <code>experiment-core</code>, and <code>agentbridge</code>;
+The directory must contain <code>ldcon</code>, <code>experiment-core</code>, <code>experiment-drivers</code>, and <code>agentbridge</code>;
 missing repositories are cloned. Use <code>--venv /absolute/new-venv</code> for a separate test environment.</p>
 <pre># Equivalent editable installs after the clones exist:
 .venv/bin/python -m pip install -c constraints.txt \
-  -e libraries/experiment-core -e libraries/agentbridge \
+  -e libraries/experiment-core -e libraries/experiment-drivers -e libraries/agentbridge \
   -e 'libraries/ldcon[web,instruments,analysis,agents]'
 .venv/bin/python -m pip list --editable</pre>
 <p>Python source edits take effect in newly started processes. Running processes keep loaded modules;
@@ -33,7 +33,7 @@ metadata require rerunning setup. If changing a package version, update the corr
 .venv/bin/python -m pip list --editable
 python3.12 ops/setup.py --editable
 .venv/bin/python -m pip list --editable</pre>
-<p>Published mode explicitly reinstalls the three pinned PyPI distributions, so a same-version editable
+<p>Published mode explicitly reinstalls the pinned distributions from PyPI and GitHub (including the SHA-256-checked DHO wheel), so a same-version editable
 installation does not remain active. Library checkouts and their edits remain on disk. Switching back reuses them.
 Do not run either mode against the virtualenv of a running deployment. Use another <code>--venv</code> and
 review its configuration before a planned cutover.</p>

@@ -7,7 +7,7 @@ import shutil
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGES = ('experiment-core', 'fanharvard-agentbridge', 'ldcon')
+PACKAGES = ('experiment-core', 'fanharvard-experiment-drivers', 'fanharvard-agentbridge', 'ldcon')
 
 
 def run(*args):
@@ -31,7 +31,7 @@ def main():
     run(*common, '--editable')
     assert set(PACKAGES) <= editable(python)
     # Keep uncommitted developer edits across both transitions.
-    readmes = [libs / n / 'README.md' for n in ('ldcon', 'experiment-core', 'agentbridge')]
+    readmes = [libs / n / 'README.md' for n in ('ldcon', 'experiment-core', 'experiment-drivers', 'agentbridge')]
     for p in readmes:
         p.write_text(p.read_text() + '\nLocal install-mode preservation probe.\n')
     contents = {p: p.read_bytes() for p in readmes}
@@ -40,7 +40,7 @@ def main():
     run(*common, '--editable')
     assert set(PACKAGES) <= editable(python)
     assert all(p.read_bytes() == contents[p] for p in readmes)
-    probe = "import ldcon,experiment_core,agentbridge,json; print(json.dumps([m.__file__ for m in (ldcon,experiment_core,agentbridge)]))"
+    probe = "import ldcon,experiment_core,experiment_drivers,agentbridge,json; print(json.dumps([m.__file__ for m in (ldcon,experiment_core,experiment_drivers,agentbridge)]))"
     paths = json.loads(subprocess.check_output([str(python), '-c', probe], text=True))
     assert all(Path(p).resolve().is_relative_to(libs) for p in paths)
     run(python, ROOT / 'ops/site.py', 'init', root / 'state')

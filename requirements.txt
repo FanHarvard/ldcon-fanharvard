@@ -1,5 +1,6 @@
 # Public libraries, with the complete resolved environment in constraints.txt.
 -c constraints.txt
-ldcon[web,instruments,analysis,agents]==0.2.2
+ldcon[web,instruments,analysis,agents] @ https://github.com/FanHarvard/ldcon/archive/dbef5052d6393470532f8bac3001ac250df2dc21.tar.gz
 experiment-core==0.1.0
+fanharvard-experiment-drivers @ https://github.com/FanHarvard/experiment-drivers/releases/download/v0.1.0/fanharvard_experiment_drivers-0.1.0-py3-none-any.whl#sha256=9cc6af8389722833dd41cdd532e9544a0a6452fa4ce8537f7cb980ef20e82c9b
 fanharvard-agentbridge==0.1.0
