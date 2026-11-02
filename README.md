@@ -4,7 +4,7 @@ FanHarvard laser-operation configuration for **Sr422 (ECDL), Sr1092 (DFB/DBR), a
 **Still in active development.** MIT licensed.
 
 This repository contains site wiring, laser/deck settings and setup tools. Control code comes from
-[ldcon](https://github.com/FanHarvard/ldcon), [experiment-core](https://github.com/FanHarvard/experiment-core)
+[ldcon](https://github.com/FanHarvard/ldcon), [experiment-core](https://github.com/FanHarvard/experiment-core), [experiment-drivers](https://github.com/FanHarvard/experiment-drivers)
 and [agentbridge](https://github.com/FanHarvard/agentbridge).
 
 ```bash
@@ -14,9 +14,9 @@ python3.12 ops/setup.py --editable
 .venv/bin/python ops/site.py init "$HOME/.local/share/ldcon-fanharvard"
 ```
 
-`--editable` clones the three libraries into `libraries/` and installs them with `pip install -e`.
+`--editable` clones the four libraries into `libraries/` and installs them with `pip install -e`.
 Edit those checkouts directly; Python changes apply on the next process start. Existing checkouts and
-uncommitted changes are preserved. To use pinned PyPI releases instead:
+uncommitted changes are preserved. To use pinned releases (including the shared DHO wheel from GitHub) instead:
 
 ```bash
 python3.12 ops/setup.py --published
